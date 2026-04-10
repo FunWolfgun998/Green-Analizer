@@ -1,9 +1,10 @@
+using Green_Analizer.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
-using Green_Analizer.Models;
 
 namespace Green_Analizer.Service
 {
@@ -17,11 +18,17 @@ namespace Green_Analizer.Service
 
             try
             {
+                string latPulita = lat.Replace(",", ".");
+                string lonPulita = lon.Replace(",", ".");
+
                 string dataInizio = "2013-01-03";
                 string dataFine = DateTime.Today.AddDays(-2).ToString("yyyy-MM-dd");
 
-                string urlMeteo = $"https://archive-api.open-meteo.com/v1/archive?latitude={lat}&longitude={lon}&start_date={dataInizio}&end_date={dataFine}&hourly=temperature_2m,precipitation,wind_speed_10m&timezone=Europe%2FRome";
-                string urlInquinamento = $"https://air-quality-api.open-meteo.com/v1/air-quality?latitude={lat}&longitude={lon}&start_date={dataInizio}&end_date={dataFine}&hourly=pm10,pm2_5,nitrogen_dioxide,european_aqi_pm10,european_aqi_pm2_5,european_aqi_nitrogen_dioxide&timezone=Europe%2FRome";
+                string urlMeteo = $"https://archive-api.open-meteo.com/v1/archive?latitude={latPulita}&longitude={lonPulita}&start_date={dataInizio}&end_date={dataFine}&hourly=temperature_2m,precipitation,wind_speed_10m&timezone=Europe%2FRome";
+                string urlInquinamento = $"https://air-quality-api.open-meteo.com/v1/air-quality?latitude={latPulita}&longitude={lonPulita}&start_date={dataInizio}&end_date={dataFine}&hourly=pm10,pm2_5,nitrogen_dioxide,european_aqi_pm10,european_aqi_pm2_5,european_aqi_nitrogen_dioxide&timezone=Europe%2FRome";
+
+                Debug.WriteLine("URL Meteo: " + urlMeteo);
+                Debug.WriteLine("URL Inquinamento: " + urlInquinamento);
 
                 string jsonMeteo = await _client.GetStringAsync(urlMeteo);
                 string jsonInquinamento = await _client.GetStringAsync(urlInquinamento);
@@ -108,6 +115,7 @@ namespace Green_Analizer.Service
             }
             catch (Exception ex)
             {
+
                 throw new Exception($"Errore API per coordinate {lat}, {lon}: {ex.Message}");
             }
         }

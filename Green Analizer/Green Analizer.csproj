@@ -35,6 +35,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="GMap.NET.Core, Version=1.7.5.0, Culture=neutral, PublicKeyToken=b85b9027b614afef, processorArchitecture=MSIL">
+      <HintPath>..\packages\GMap.NET.WindowsForms.1.7.5\lib\net40\GMap.NET.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="GMap.NET.WindowsForms, Version=1.7.5.0, Culture=neutral, PublicKeyToken=b85b9027b614afef, processorArchitecture=MSIL">
+      <HintPath>..\packages\GMap.NET.WindowsForms.1.7.5\lib\net40\GMap.NET.WindowsForms.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=10.0.0.5, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.10.0.5\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
@@ -81,10 +87,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Form1.cs">
-      <SubType>Form</SubType>
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormMappa.cs">
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="Models\DatoAmbientale.cs" />
     <Compile Include="Program.cs" />
