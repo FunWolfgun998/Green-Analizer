@@ -38,8 +38,17 @@ namespace Green_Analizer
         {
             foreach (Control c in controlli)
             {
-                // LA MAGIA E' QUI: Distinguiamo i tipi di pannelli
-                if (c is TableLayoutPanel tlp)
+                if (c is IconHoverButton iconBtn)
+                {
+                    iconBtn.BackColor = Color.Transparent;
+                    iconBtn.ForeColor = text; // Adatta il colore dell'emoji al tema
+                    iconBtn.FlatAppearance.MouseDownBackColor = Color.Transparent;
+                    iconBtn.FlatAppearance.MouseOverBackColor = Color.Transparent;
+                    iconBtn.FlatStyle = FlatStyle.Flat;
+                    iconBtn.FlatAppearance.BorderSize = 0;
+                    iconBtn.BackColor = Color.Transparent;
+                }
+                else if (c is TableLayoutPanel tlp)
                 {
                     // La tabella DEVE essere trasparente o dello stesso colore del Form per far vedere gli spazi
                     tlp.BackColor = bg;
@@ -56,8 +65,17 @@ namespace Green_Analizer
                 {
                     btn.FlatStyle = FlatStyle.Flat;
                     btn.FlatAppearance.BorderSize = 0;
-                    btn.BackColor = accent;
-                    btn.ForeColor = Color.White;
+
+                    if (btn.Name == "IconBtn")
+                    {
+                        btn.BackColor = Color.Transparent;
+                        btn.ForeColor = text;
+                    }
+                    else // Altrimenti è un bottone normale (es. "Analizza Dati") e lo facciamo verde
+                    {
+                        btn.BackColor = accent;
+                        btn.ForeColor = Color.White;
+                    }
                 }
                 else if (c is ComboBox || c is DateTimePicker)
                 {

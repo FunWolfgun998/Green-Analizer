@@ -12,30 +12,6 @@ using System.Windows.Forms.DataVisualization.Charting;
 
 namespace Green_Analizer
 {
-    // =======================================================
-    // NUOVA CLASSE: IL BOTTONE ROTONDO
-    // =======================================================
-    public class RoundButton : Button
-    {
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            GraphicsPath grPath = new GraphicsPath();
-            grPath.AddEllipse(0, 0, ClientSize.Width, ClientSize.Height);
-            this.Region = new System.Drawing.Region(grPath);
-            base.OnPaint(e);
-        }
-
-        private void InitializeComponent()
-        {
-            this.SuspendLayout();
-            this.ResumeLayout(false);
-
-        }
-    }
-
-    // =======================================================
-    // FORM PRINCIPALE
-    // =======================================================
     public partial class Form1 : Form
     {
         private Panel pnlTopBar;
@@ -59,10 +35,19 @@ namespace Green_Analizer
         private Label lblC2Nome, lblC2Temp, lblC2Pol, lblC2Critici;
 
         // Usiamo la nostra nuova classe RoundButton
-        private RoundButton btnMappa1;
-        private RoundButton btnMappa2;
+        private IconHoverButton btnMappa1;
+        private IconHoverButton btnMappa2;
+
+        private ComboBox cmbCorrelazioneX;
+        private ToolTip ttInfo;
+        private Label lblInfo;
+
+        private Label lblC1Meteo, lblC1Aqi;
+        private Label lblC2Meteo, lblC2Aqi;
 
         private StorageService _storage = new StorageService();
+        private AnalysisService _analizzatore = new AnalysisService();
+
 
         // Dizionario di base
         private Dictionary<string, (string Lat, string Lon)> _dizionarioCitta = new Dictionary<string, (string, string)>
@@ -120,15 +105,46 @@ namespace Green_Analizer
             pnlTopBar = new Panel { Name = "CardTop", Dock = DockStyle.Top, Height = 60 };
             this.Controls.Add(pnlTopBar);
 
-            flwFiltri = new FlowLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(15, 10, 0, 0), AutoSize = true };
-            pnlTopBar.Controls.Add(flwFiltri);
+            TableLayoutPanel tblTop = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 19, // 19 colonne per 19 elementi
+                RowCount = 1,
+                BackColor = Color.Transparent
+            };
+            pnlTopBar.Controls.Add(tblTop);
 
+            // Piccola funzione interna per centrare gli elementi nella tabella
+            void AddToTop(Control c, int col)
+            {
+                c.Anchor = AnchorStyles.None;
+                c.Margin = new Padding(2, 0, 2, 0);
+                tblTop.Controls.Add(c, col, 0);
+            }
+
+            //Creazione elementi top bar
             cmbCitta1 = new ComboBox { Width = 110, FlatStyle = FlatStyle.Flat, DropDownStyle = ComboBoxStyle.DropDownList };
             cmbCitta2 = new ComboBox { Width = 110, FlatStyle = FlatStyle.Flat, DropDownStyle = ComboBoxStyle.DropDownList };
 
             cmbInquinante = new ComboBox { Width = 80, FlatStyle = FlatStyle.Flat, DropDownStyle = ComboBoxStyle.DropDownList };
             cmbInquinante.Items.AddRange(new string[] { "PM10", "PM2.5", "NO2" });
             cmbInquinante.SelectedIndex = 0;
+
+            ToolTip ttInfo = new ToolTip { AutoPopDelay = 20000, InitialDelay = 200, ReshowDelay = 200, IsBalloon = true, ToolTipTitle = "Soglie Ufficiali Qualità Aria (µg/m³)", ToolTipIcon = ToolTipIcon.Info };
+            string testoTabella =
+                "--- PM2.5 (Medie 24h) ---\n" +
+                "Buono: 0-10 | Discreto: 10-20 | Moderato: 20-25\nScadente: 25-50 | Molto Scadente: 50-75 | Pessimo: > 75\n\n" +
+                "--- PM10 (Medie 24h) ---\n" +
+                "Buono: 0-20 | Discreto: 20-40 | Moderato: 40-50\nScadente: 50-100 | Molto Scadente: 100-150 | Pessimo: > 150\n\n" +
+                "--- NO2 (Medie Orarie) ---\n" +
+                "Buono: 0-40 | Discreto: 40-90 | Moderato: 90-120\nScadente: 120-230 | Molto Scadente: 230-340 | Pessimo: > 340";
+
+            Label lblInfo = new Label { Text = "ℹ️", AutoSize = true, Cursor = Cursors.Help, Font = new Font("Segoe UI Emoji", 14) };
+            ttInfo.SetToolTip(lblInfo, testoTabella);
+
+            cmbCorrelazioneX = new ComboBox { Width = 110, FlatStyle = FlatStyle.Flat, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbCorrelazioneX.Items.AddRange(new string[] { "Temperatura", "Precipitazioni", "Vento" });
+            cmbCorrelazioneX.SelectedIndex = 0;
 
             cmbVista = new ComboBox { Width = 130, FlatStyle = FlatStyle.Flat, DropDownStyle = ComboBoxStyle.DropDownList };
             cmbVista.Items.AddRange(new string[] { "Doppio Grafico", "Solo Andamento", "Solo Correlazione" });
@@ -140,72 +156,89 @@ namespace Green_Analizer
             btnAnalizza = new Button { Text = "Esegui Analisi", Width = 110, Height = 28, Cursor = Cursors.Hand };
             btnTema = new Button { Text = "Tema", Width = 60, Height = 28, Cursor = Cursors.Hand };
 
-            // --- BOTTONI ROTONDI --- (Larghezza e Altezza devono essere uguali!)
-            btnMappa1 = new RoundButton { Text = "📍", Width = 30, Height = 30, Cursor = Cursors.Hand, BackColor = Color.SteelBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
-            btnMappa1.FlatAppearance.BorderSize = 0;
+            // --- NUOVI BOTTONI MAPPA (Stile Icona Trasparente) ---
+            btnMappa1 = new IconHoverButton { Text = "🌍" };
             btnMappa1.Click += (s, e) => ScegliDaMappa(cmbCitta1);
 
-            btnMappa2 = new RoundButton { Text = "📍", Width = 30, Height = 30, Cursor = Cursors.Hand, BackColor = Color.SteelBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
-            btnMappa2.FlatAppearance.BorderSize = 0;
+            btnMappa2 = new IconHoverButton { Text = "🌍" };
             btnMappa2.Click += (s, e) => ScegliDaMappa(cmbCitta2);
 
             btnTema.Click += BtnTema_Click;
             btnAnalizza.Click += BtnAnalizza_Click;
 
-            flwFiltri.Controls.Add(new Label { Text = "Punto 1:", AutoSize = true, Margin = new Padding(0, 5, 2, 0) });
-            flwFiltri.Controls.Add(cmbCitta1);
-            flwFiltri.Controls.Add(btnMappa1);
+            // Inserimento parte superiore (usa la funzione AddToTop per allineare tutto)
+            AddToTop(new Label { Text = "Punto 1:", AutoSize = true }, 0);
+            AddToTop(cmbCitta1, 1);
+            AddToTop(btnMappa1, 2);
 
-            flwFiltri.Controls.Add(new Label { Text = "VS Punto 2:", AutoSize = true, Margin = new Padding(15, 5, 2, 0) });
-            flwFiltri.Controls.Add(cmbCitta2);
-            flwFiltri.Controls.Add(btnMappa2);
+            AddToTop(new Label { Text = "VS Punto 2:", AutoSize = true }, 3);
+            AddToTop(cmbCitta2, 4);
+            AddToTop(btnMappa2, 5);
 
-            flwFiltri.Controls.Add(new Label { Text = "Inquinante:", AutoSize = true, Margin = new Padding(15, 5, 2, 0) });
-            flwFiltri.Controls.Add(cmbInquinante);
-            flwFiltri.Controls.Add(new Label { Text = "Dal:", AutoSize = true, Margin = new Padding(15, 5, 2, 0) });
-            flwFiltri.Controls.Add(dtpInizio);
-            flwFiltri.Controls.Add(new Label { Text = "Al:", AutoSize = true, Margin = new Padding(5, 5, 2, 0) });
-            flwFiltri.Controls.Add(dtpFine);
-            flwFiltri.Controls.Add(new Label { Text = "Vista:", AutoSize = true, Margin = new Padding(15, 5, 2, 0) });
-            flwFiltri.Controls.Add(cmbVista);
-            flwFiltri.Controls.Add(new Label { Width = 10 });
-            flwFiltri.Controls.Add(btnAnalizza);
-            flwFiltri.Controls.Add(btnTema);
+            AddToTop(new Label { Text = "Inquinante:", AutoSize = true }, 6);
+            AddToTop(cmbInquinante, 7);
+            AddToTop(lblInfo, 8); // L'icona della "i"
 
+            AddToTop(new Label { Text = "vs Meteo:", AutoSize = true }, 9);
+            AddToTop(cmbCorrelazioneX, 10);
+
+            AddToTop(new Label { Text = "Dal:", AutoSize = true }, 11);
+            AddToTop(dtpInizio, 12);
+
+            AddToTop(new Label { Text = "Al:", AutoSize = true }, 13);
+            AddToTop(dtpFine, 14);
+
+            AddToTop(new Label { Text = "Vista:", AutoSize = true }, 15);
+            AddToTop(cmbVista, 16);
+
+            // Spazio vuoto opzionale nella colonna 17 (se la tabella avesse più colonne), altrimenti mettiamo direttamente i bottoni
+            AddToTop(btnAnalizza, 17);
+            AddToTop(btnTema, 18);
+
+            // Parte centrale
             chartTemporale = CreaGraficoBase("Andamento nel Tempo");
             chartCorrelazione = CreaGraficoBase("Correlazione Temperatura / Inquinante");
 
             gridDati = new DataGridView { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill };
 
-            pnlKPI = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 4, BackColor = Color.Transparent };
+            // LAYOUT DOPPIO PER LE STATISTICHE
+            pnlKPI = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 6, BackColor = Color.Transparent };
             pnlKPI.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             pnlKPI.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
 
             Font fontNome = new Font("Segoe UI", 12, FontStyle.Bold);
-            Font fontVal = new Font("Segoe UI", 11, FontStyle.Regular);
+            Font fontVal = new Font("Segoe UI", 10, FontStyle.Regular);
 
-            lblC1Nome = new Label { Text = "Città 1", Font = fontNome, AutoSize = true, ForeColor = Color.SeaGreen, Margin = new Padding(5, 10, 0, 10) };
-            lblC1Temp = new Label { Text = "🌡️ -- °C", Font = fontVal, AutoSize = true, Margin = new Padding(5, 5, 0, 5) };
-            lblC1Pol = new Label { Text = "🏭 -- µg/m³", Font = fontVal, AutoSize = true, Margin = new Padding(5, 5, 0, 5) };
-            lblC1Critici = new Label { Text = "⚠️ -- Giorni Critici", Font = fontVal, AutoSize = true, ForeColor = Color.Tomato, Margin = new Padding(5, 5, 0, 5) };
+            // Etichette Città 1
+            lblC1Nome = new Label { Text = "Città 1", Font = fontNome, AutoSize = true, ForeColor = Color.SeaGreen, Margin = new Padding(5, 5, 0, 5) };
+            lblC1Temp = new Label { Text = "🌡️ -- °C", Font = fontVal, AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
+            lblC1Meteo = new Label { Text = "🌧️ -- mm  |  💨 -- km/h", Font = fontVal, AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
+            lblC1Pol = new Label { Text = "🏭 -- µg/m³", Font = fontVal, AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
+            lblC1Critici = new Label { Text = "⚠️ -- Critici", Font = fontVal, AutoSize = true, ForeColor = Color.Tomato, Margin = new Padding(5, 2, 0, 2) };
+            lblC1Aqi = new Label { Text = "Indice AQI: --", Font = new Font("Segoe UI", 10, FontStyle.Bold), AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
 
-            lblC2Nome = new Label { Text = "Città 2", Font = fontNome, AutoSize = true, ForeColor = Color.OrangeRed, Margin = new Padding(5, 10, 0, 10) };
-            lblC2Temp = new Label { Text = "🌡️ -- °C", Font = fontVal, AutoSize = true, Margin = new Padding(5, 5, 0, 5) };
-            lblC2Pol = new Label { Text = "🏭 -- µg/m³", Font = fontVal, AutoSize = true, Margin = new Padding(5, 5, 0, 5) };
-            lblC2Critici = new Label { Text = "⚠️ -- Giorni Critici", Font = fontVal, AutoSize = true, ForeColor = Color.Tomato, Margin = new Padding(5, 5, 0, 5) };
+            // Etichette Città 2
+            lblC2Nome = new Label { Text = "Città 2", Font = fontNome, AutoSize = true, ForeColor = Color.OrangeRed, Margin = new Padding(5, 5, 0, 5) };
+            lblC2Temp = new Label { Text = "🌡️ -- °C", Font = fontVal, AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
+            lblC2Meteo = new Label { Text = "🌧️ -- mm  |  💨 -- km/h", Font = fontVal, AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
+            lblC2Pol = new Label { Text = "🏭 -- µg/m³", Font = fontVal, AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
+            lblC2Critici = new Label { Text = "⚠️ -- Critici", Font = fontVal, AutoSize = true, ForeColor = Color.Tomato, Margin = new Padding(5, 2, 0, 2) };
+            lblC2Aqi = new Label { Text = "Indice AQI: --", Font = new Font("Segoe UI", 10, FontStyle.Bold), AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
 
+            // Aggiunta alla Tabella KPI
             pnlKPI.Controls.Add(lblC1Nome, 0, 0); pnlKPI.Controls.Add(lblC2Nome, 1, 0);
             pnlKPI.Controls.Add(lblC1Temp, 0, 1); pnlKPI.Controls.Add(lblC2Temp, 1, 1);
-            pnlKPI.Controls.Add(lblC1Pol, 0, 2); pnlKPI.Controls.Add(lblC2Pol, 1, 2);
-            pnlKPI.Controls.Add(lblC1Critici, 0, 3); pnlKPI.Controls.Add(lblC2Critici, 1, 3);
-
+            pnlKPI.Controls.Add(lblC1Meteo, 0, 2); pnlKPI.Controls.Add(lblC2Meteo, 1, 2);
+            pnlKPI.Controls.Add(lblC1Pol, 0, 3); pnlKPI.Controls.Add(lblC2Pol, 1, 3);
+            pnlKPI.Controls.Add(lblC1Critici, 0, 4); pnlKPI.Controls.Add(lblC2Critici, 1, 4);
+            pnlKPI.Controls.Add(lblC1Aqi, 0, 5); pnlKPI.Controls.Add(lblC2Aqi, 1, 5);
+            //4 aree dei grafici e dati
             Padding cardMargin = new Padding(10);
             Panel card1 = new Panel { Name = "Card1", Dock = DockStyle.Fill, Margin = cardMargin }; card1.Controls.Add(chartTemporale); tblMainLayout.Controls.Add(card1, 0, 0);
             Panel card2 = new Panel { Name = "Card2", Dock = DockStyle.Fill, Margin = cardMargin }; card2.Controls.Add(chartCorrelazione); tblMainLayout.Controls.Add(card2, 0, 1);
             Panel card3 = new Panel { Name = "Card3", Dock = DockStyle.Fill, Margin = cardMargin, Padding = new Padding(10) }; card3.Controls.Add(gridDati); tblMainLayout.Controls.Add(card3, 1, 0);
             Panel card4 = new Panel { Name = "Card4", Dock = DockStyle.Fill, Margin = cardMargin, Padding = new Padding(10) }; card4.Controls.Add(pnlKPI); tblMainLayout.Controls.Add(card4, 1, 1);
         }
-
         private Chart CreaGraficoBase(string titolo)
         {
             Chart chart = new Chart { Dock = DockStyle.Fill };
@@ -291,67 +324,77 @@ namespace Green_Analizer
             Color col1 = ThemeManager.IsDarkMode ? Color.SpringGreen : Color.SeaGreen;
             Color col2 = ThemeManager.IsDarkMode ? Color.Tomato : Color.OrangeRed;
 
-            Func<DatoAmbientale, double> selettore;
-            if (inquinante == "PM2.5") selettore = d => d.PM25;
-            else if (inquinante == "NO2") selettore = d => d.NO2;
-            else selettore = d => d.PM10;
+            // Asse Y (Inquinante)
+            Func<DatoAmbientale, double> selY;
+            if (inquinante == "PM2.5") selY = d => d.PM25;
+            else if (inquinante == "NO2") selY = d => d.NO2;
+            else selY = d => d.PM10;
 
+            // Asse X (Variabile Meteo selezionata)
+            string varMeteo = cmbCorrelazioneX.SelectedItem.ToString();
+            Func<DatoAmbientale, double> selX;
+            string unitaMisuraX = "°C";
+
+            if (varMeteo == "Precipitazioni") { selX = d => d.PrecipitazioniTotali; unitaMisuraX = "mm"; }
+            else if (varMeteo == "Vento") { selX = d => d.VentoMedia; unitaMisuraX = "km/h"; }
+            else { selX = d => d.TemperaturaMedia; unitaMisuraX = "°C"; }
+
+            // --- GRAFICO TEMPORALE ---
             chartTemporale.Titles[0].Text = $"Andamento {inquinante} nel Tempo";
             Series s1Temp = new Series(c1) { ChartType = SeriesChartType.Line, BorderWidth = 2, Color = col1 };
             Series s2Temp = new Series(c2) { ChartType = SeriesChartType.Line, BorderWidth = 2, Color = col2 };
 
-            foreach (var d in d1) s1Temp.Points.AddXY(d.Data, selettore(d));
-            foreach (var d in d2) s2Temp.Points.AddXY(d.Data, selettore(d));
+            foreach (var d in d1) s1Temp.Points.AddXY(d.Data, selY(d));
+            foreach (var d in d2) s2Temp.Points.AddXY(d.Data, selY(d));
 
             chartTemporale.Series.Add(s1Temp);
             chartTemporale.Series.Add(s2Temp);
             chartTemporale.ChartAreas[0].AxisX.Title = "Data";
             chartTemporale.ChartAreas[0].AxisY.Title = $"{inquinante} (µg/m³)";
 
-            chartCorrelazione.Titles[0].Text = $"Correlazione Temperatura vs {inquinante}";
+            // --- GRAFICO CORRELAZIONE DINAMICO ---
+            chartCorrelazione.Titles[0].Text = $"Correlazione {varMeteo} vs {inquinante}";
             Series s1Corr = new Series(c1) { ChartType = SeriesChartType.Point, MarkerSize = 5, Color = col1 };
             Series s2Corr = new Series(c2) { ChartType = SeriesChartType.Point, MarkerSize = 5, Color = col2 };
 
-            foreach (var d in d1) s1Corr.Points.AddXY(d.TemperaturaMedia, selettore(d));
-            foreach (var d in d2) s2Corr.Points.AddXY(d.TemperaturaMedia, selettore(d));
+            // Disegna usando selX per l'asse orizzontale e selY per il verticale
+            foreach (var d in d1) { if (selX(d) > 0 || varMeteo == "Temperatura") s1Corr.Points.AddXY(selX(d), selY(d)); }
+            foreach (var d in d2) { if (selX(d) > 0 || varMeteo == "Temperatura") s2Corr.Points.AddXY(selX(d), selY(d)); }
 
             chartCorrelazione.Series.Add(s1Corr);
             chartCorrelazione.Series.Add(s2Corr);
-            chartCorrelazione.ChartAreas[0].AxisX.Title = "Temperatura (°C)";
+            chartCorrelazione.ChartAreas[0].AxisX.Title = $"{varMeteo} ({unitaMisuraX})";
             chartCorrelazione.ChartAreas[0].AxisY.Title = $"{inquinante} (µg/m³)";
         }
 
         private void AggiornaKPI(List<DatoAmbientale> d1, string c1, List<DatoAmbientale> d2, string c2, string inquinante)
         {
-            int limite = 50;
-            if (inquinante == "PM2.5") limite = 25;
-            if (inquinante == "NO2") limite = 40;
+            // Il backend si occupa di tutto!
+            StatisticheReport rep1 = _analizzatore.CalcolaStatistiche(d1, c1, inquinante);
+            StatisticheReport rep2 = _analizzatore.CalcolaStatistiche(d2, c2, inquinante);
 
-            Func<DatoAmbientale, double> sel;
-            if (inquinante == "PM2.5") sel = d => d.PM25;
-            else if (inquinante == "NO2") sel = d => d.NO2;
-            else sel = d => d.PM10;
-
-            lblC1Nome.Text = c1;
+            lblC1Nome.Text = rep1.Citta;
             if (d1.Count > 0)
             {
-                lblC1Temp.Text = $"🌡️ {d1.Average(d => d.TemperaturaMedia):F1} °C";
-                lblC1Pol.Text = $"🏭 {d1.Average(sel):F1} µg/m³";
-                lblC1Critici.Text = $"⚠️ {d1.Count(d => sel(d) > limite)} Giorni Critici";
+                lblC1Temp.Text = $"🌡️ Temp Media: {rep1.TempMedia} °C";
+                lblC1Meteo.Text = $"🌧️ Pioggia Tot: {rep1.PrecipitazioniTotali} mm \n💨 Vento: {rep1.VentoMedio} km/h";
+                lblC1Pol.Text = $"🏭 {inquinante} Medio: {rep1.InquinanteMedio} µg/m³";
+                lblC1Critici.Text = $"⚠️ {rep1.GiorniCritici} Giorni Fuori Limite";
+
+                // MOSTRA DIRETTAMENTE IL TESTO GENERATO DAL BACKEND (Es: "Moderata (🟡)")
+                lblC1Aqi.Text = $"Qualità Media: {rep1.QualitaAriaAqi}";
             }
 
-            lblC2Nome.Text = c2;
+            lblC2Nome.Text = rep2.Citta;
             if (d2.Count > 0)
             {
-                lblC2Temp.Text = $"🌡️ {d2.Average(d => d.TemperaturaMedia):F1} °C";
-                lblC2Pol.Text = $"🏭 {d2.Average(sel):F1} µg/m³";
-                lblC2Critici.Text = $"⚠️ {d2.Count(d => sel(d) > limite)} Giorni Critici";
+                lblC2Temp.Text = $"🌡️ Temp Media: {rep2.TempMedia} °C";
+                lblC2Meteo.Text = $"🌧️ Pioggia Tot: {rep2.PrecipitazioniTotali} mm \n💨 Vento: {rep2.VentoMedio} km/h";
+                lblC2Pol.Text = $"🏭 {inquinante} Medio: {rep2.InquinanteMedio} µg/m³";
+                lblC2Critici.Text = $"⚠️ {rep2.GiorniCritici} Giorni Fuori Limite";
+                lblC2Aqi.Text = $"Qualità Media: {rep2.QualitaAriaAqi}";
             }
         }
-
-        // =========================================================================
-        // NUOVO: LOGICA MAPPA E SALVATAGGIO PREFERITI
-        // =========================================================================
         private void ScegliDaMappa(ComboBox targetCombo)
         {
             using (FormMappa frmMappa = new FormMappa())
