@@ -31,7 +31,7 @@ namespace Green_Analizer
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            // 1. Sfondo trasparente
+            // Imposta sfondo trasparente
             if (Parent != null)
             {
                 using (SolidBrush parentBrush = new SolidBrush(Parent.BackColor))
@@ -40,7 +40,7 @@ namespace Green_Analizer
                 }
             }
 
-            // 2. Disegna il cerchio (Il segreto è usare Width e Height uguali)
+            // Disegna il cerchio (Il segreto è usare Width e Height uguali)
             if (isHovered)
             {
                 e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;

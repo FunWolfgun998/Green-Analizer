@@ -14,8 +14,8 @@ namespace Green_Analizer
 {
     public partial class Form1 : Form
     {
+        //Dichiarazione di tutti i elementi grafici del form 
         private Panel pnlTopBar;
-        private FlowLayoutPanel flwFiltri;
         private TableLayoutPanel tblMainLayout;
 
         private ComboBox cmbCitta1;
@@ -34,7 +34,7 @@ namespace Green_Analizer
         private Label lblC1Nome, lblC1Temp, lblC1Pol, lblC1Critici;
         private Label lblC2Nome, lblC2Temp, lblC2Pol, lblC2Critici;
 
-        // Usiamo la nostra nuova classe RoundButton
+        // Uso della classe custom IconHoverButton per avere pulsanti rotondi 
         private IconHoverButton btnMappa1;
         private IconHoverButton btnMappa2;
 
@@ -49,7 +49,7 @@ namespace Green_Analizer
         private AnalysisService _analizzatore = new AnalysisService();
 
 
-        // Dizionario di base
+        // Dizionario di base che attraverso il ServiceStorage aggiuge le posizioni preferite
         private Dictionary<string, (string Lat, string Lon)> _dizionarioCitta = new Dictionary<string, (string, string)>
         {
             { "Vicenza", ("45.5467", "11.5475") },
@@ -62,7 +62,7 @@ namespace Green_Analizer
         public Form1()
         {
             InitializeComponent();
-            CaricaCittaSalvate(); // Carica i preferiti salvati in precedenza
+            CaricaCittaSalvate(); // Carica le posizioni preferite salvati in precedenza
             CostruisciInterfaccia();
 
             cmbCitta1.DataSource = new BindingSource(_dizionarioCitta.Keys, null);
@@ -91,17 +91,19 @@ namespace Green_Analizer
 
         private void CostruisciInterfaccia()
         {
+            // metodo che imposta tutti i elementi grafici al loro posto
             this.Text = "Green Analyzer - Dashboard Ambientale";
             this.WindowState = FormWindowState.Maximized;
             this.MinimumSize = new Size(1024, 768);
-
+            //Panel principale che contiene tutti i elementi grafici.
+            //Questo oggetto poi viene passato come parametro al ThemeManager per impostare correttamnete il tema.
             tblMainLayout = new TableLayoutPanel { Dock = DockStyle.Fill, BackColor = Color.Transparent, CellBorderStyle = TableLayoutPanelCellBorderStyle.None, ColumnCount = 2, RowCount = 2 };
             tblMainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
             tblMainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
             tblMainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             tblMainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             this.Controls.Add(tblMainLayout);
-
+            //Panello superiore che tutti parametri per l'analisi dati
             pnlTopBar = new Panel { Name = "CardTop", Dock = DockStyle.Top, Height = 60 };
             this.Controls.Add(pnlTopBar);
 
@@ -122,14 +124,15 @@ namespace Green_Analizer
                 tblTop.Controls.Add(c, col, 0);
             }
 
-            //Creazione elementi top bar
+            //Creazione di tutti i elementi della top bar
+            //ComboXox per selezionare le posizioni da comparare
             cmbCitta1 = new ComboBox { Width = 110, FlatStyle = FlatStyle.Flat, DropDownStyle = ComboBoxStyle.DropDownList };
             cmbCitta2 = new ComboBox { Width = 110, FlatStyle = FlatStyle.Flat, DropDownStyle = ComboBoxStyle.DropDownList };
-
+            //ComboBox per selezionare il tipo di valore inquinante analizzare
             cmbInquinante = new ComboBox { Width = 80, FlatStyle = FlatStyle.Flat, DropDownStyle = ComboBoxStyle.DropDownList };
             cmbInquinante.Items.AddRange(new string[] { "PM10", "PM2.5", "NO2" });
             cmbInquinante.SelectedIndex = 0;
-
+            //ToolTip per visualizzare tabella dell'AQI
             ToolTip ttInfo = new ToolTip { AutoPopDelay = 20000, InitialDelay = 200, ReshowDelay = 200, IsBalloon = true, ToolTipTitle = "Soglie Ufficiali Qualità Aria (µg/m³)", ToolTipIcon = ToolTipIcon.Info };
             string testoTabella =
                 "--- PM2.5 (Medie 24h) ---\n" +
@@ -138,25 +141,25 @@ namespace Green_Analizer
                 "Buono: 0-20 | Discreto: 20-40 | Moderato: 40-50\nScadente: 50-100 | Molto Scadente: 100-150 | Pessimo: > 150\n\n" +
                 "--- NO2 (Medie Orarie) ---\n" +
                 "Buono: 0-40 | Discreto: 40-90 | Moderato: 90-120\nScadente: 120-230 | Molto Scadente: 230-340 | Pessimo: > 340";
-
+            //Label per il ToolTip
             Label lblInfo = new Label { Text = "ℹ️", AutoSize = true, Cursor = Cursors.Help, Font = new Font("Segoe UI Emoji", 14) };
             ttInfo.SetToolTip(lblInfo, testoTabella);
-
+            //ComboBox per selezionare con quale valore vogliamo fare una correllazione alla temperatura
             cmbCorrelazioneX = new ComboBox { Width = 110, FlatStyle = FlatStyle.Flat, DropDownStyle = ComboBoxStyle.DropDownList };
             cmbCorrelazioneX.Items.AddRange(new string[] { "Temperatura", "Precipitazioni", "Vento" });
             cmbCorrelazioneX.SelectedIndex = 0;
-
+            //ComboBox per selezionare come visualizzare i grafici
             cmbVista = new ComboBox { Width = 130, FlatStyle = FlatStyle.Flat, DropDownStyle = ComboBoxStyle.DropDownList };
             cmbVista.Items.AddRange(new string[] { "Doppio Grafico", "Solo Andamento", "Solo Correlazione" });
             cmbVista.SelectedIndex = 0;
             cmbVista.SelectedIndexChanged += CmbVista_SelectedIndexChanged;
-
+            //DateTimePicker per selezionare il lasso di tempo da analizzare
             dtpInizio = new DateTimePicker { Format = DateTimePickerFormat.Short, Width = 100 };
             dtpFine = new DateTimePicker { Format = DateTimePickerFormat.Short, Width = 100 };
             btnAnalizza = new Button { Text = "Esegui Analisi", Width = 110, Height = 28, Cursor = Cursors.Hand };
             btnTema = new Button { Text = "Tema", Width = 60, Height = 28, Cursor = Cursors.Hand };
 
-            // --- NUOVI BOTTONI MAPPA (Stile Icona Trasparente) ---
+            //Pulsanti per aprire la mappa e selezionare nuove posizioni
             btnMappa1 = new IconHoverButton { Text = "🌍" };
             btnMappa1.Click += (s, e) => ScegliDaMappa(cmbCitta1);
 
@@ -166,7 +169,7 @@ namespace Green_Analizer
             btnTema.Click += BtnTema_Click;
             btnAnalizza.Click += BtnAnalizza_Click;
 
-            // Inserimento parte superiore (usa la funzione AddToTop per allineare tutto)
+            // Inserimento parte superiore (uso dell funzione AddToTop interna per allineare tutto)
             AddToTop(new Label { Text = "Punto 1:", AutoSize = true }, 0);
             AddToTop(cmbCitta1, 1);
             AddToTop(btnMappa1, 2);
@@ -191,17 +194,16 @@ namespace Green_Analizer
             AddToTop(new Label { Text = "Vista:", AutoSize = true }, 15);
             AddToTop(cmbVista, 16);
 
-            // Spazio vuoto opzionale nella colonna 17 (se la tabella avesse più colonne), altrimenti mettiamo direttamente i bottoni
             AddToTop(btnAnalizza, 17);
             AddToTop(btnTema, 18);
 
-            // Parte centrale
+            // Parte centrale ocn i 2 grefici: quello in relazione al tempo e quelo in relazione alla temperatura
             chartTemporale = CreaGraficoBase("Andamento nel Tempo");
             chartCorrelazione = CreaGraficoBase("Correlazione Temperatura / Inquinante");
 
             gridDati = new DataGridView { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill };
 
-            // LAYOUT DOPPIO PER LE STATISTICHE
+            //LAYOUT DOPPIO PER LE STATISTICHE
             pnlKPI = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 6, BackColor = Color.Transparent };
             pnlKPI.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             pnlKPI.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
@@ -234,13 +236,25 @@ namespace Green_Analizer
             pnlKPI.Controls.Add(lblC1Aqi, 0, 5); pnlKPI.Controls.Add(lblC2Aqi, 1, 5);
             //4 aree dei grafici e dati
             Padding cardMargin = new Padding(10);
-            Panel card1 = new Panel { Name = "Card1", Dock = DockStyle.Fill, Margin = cardMargin }; card1.Controls.Add(chartTemporale); tblMainLayout.Controls.Add(card1, 0, 0);
-            Panel card2 = new Panel { Name = "Card2", Dock = DockStyle.Fill, Margin = cardMargin }; card2.Controls.Add(chartCorrelazione); tblMainLayout.Controls.Add(card2, 0, 1);
-            Panel card3 = new Panel { Name = "Card3", Dock = DockStyle.Fill, Margin = cardMargin, Padding = new Padding(10) }; card3.Controls.Add(gridDati); tblMainLayout.Controls.Add(card3, 1, 0);
-            Panel card4 = new Panel { Name = "Card4", Dock = DockStyle.Fill, Margin = cardMargin, Padding = new Padding(10) }; card4.Controls.Add(pnlKPI); tblMainLayout.Controls.Add(card4, 1, 1);
+
+            Panel card1 = new Panel { Name = "Card1", Dock = DockStyle.Fill, Margin = cardMargin }; 
+            Panel card2 = new Panel { Name = "Card2", Dock = DockStyle.Fill, Margin = cardMargin }; 
+            Panel card3 = new Panel { Name = "Card3", Dock = DockStyle.Fill, Margin = cardMargin, Padding = new Padding(10) }; 
+            Panel card4 = new Panel { Name = "Card4", Dock = DockStyle.Fill, Margin = cardMargin, Padding = new Padding(10) };
+           
+            card1.Controls.Add(chartTemporale);
+            card2.Controls.Add(chartCorrelazione);
+            card3.Controls.Add(gridDati);
+            card4.Controls.Add(pnlKPI);
+
+            tblMainLayout.Controls.Add(card1, 0, 0);
+            tblMainLayout.Controls.Add(card2, 0, 1);
+            tblMainLayout.Controls.Add(card3, 1, 0);
+            tblMainLayout.Controls.Add(card4, 1, 1);
         }
         private Chart CreaGraficoBase(string titolo)
         {
+            //metodo per inizializare i grafici
             Chart chart = new Chart { Dock = DockStyle.Fill };
             ChartArea area = new ChartArea();
             chart.ChartAreas.Add(area);
@@ -279,6 +293,7 @@ namespace Green_Analizer
 
         private async void BtnAnalizza_Click(object sender, EventArgs e)
         {
+            //Il metodo analizza aggiuge ai grafci i dati
             try
             {
                 btnAnalizza.Enabled = false;
@@ -299,12 +314,14 @@ namespace Green_Analizer
                 AggiornaGrafici(filtriC1, c1, filtriC2, c2, inqSelezionato);
                 AggiornaKPI(filtriC1, c1, filtriC2, c2, inqSelezionato);
             }
+            //eccezioni per troppe richieste o per assenza di internet 
             catch (Exception ex) { MessageBox.Show("Errore: " + ex.Message); }
             finally { btnAnalizza.Enabled = true; btnAnalizza.Text = "Esegui Analisi"; }
         }
 
         private async Task<List<DatoAmbientale>> OttieniDatiIntelligente(string citta)
         {
+            //metodo per ritornare i dati dai file JSON
             var dati = _storage.CaricaDati(citta);
             if (dati.Count == 0 || dati.Last().Data < DateTime.Today.AddDays(-3))
             {
@@ -395,6 +412,7 @@ namespace Green_Analizer
                 lblC2Aqi.Text = $"Qualità Media: {rep2.QualitaAriaAqi}";
             }
         }
+        //Metodo per scegliere le coordinate tramite mappa e aggiugerlo alle opzioni
         private void ScegliDaMappa(ComboBox targetCombo)
         {
             using (FormMappa frmMappa = new FormMappa())
@@ -415,7 +433,7 @@ namespace Green_Analizer
                         _dizionarioCitta[nomeVisualizzato] = (lat.ToString(), lon.ToString());
                     }
 
-                    // SALVATAGGIO PERMANENTE: Solo se l'utente ha scritto un nome ed è reale
+                    // SALVATAGGIO PERMANENTE: Solo se l'utente ha scritto un nome 
                     if (risultato.salva && !string.IsNullOrWhiteSpace(risultato.nome))
                     {
                         _storage.SalvaListaCitta(_dizionarioCitta);
@@ -436,6 +454,7 @@ namespace Green_Analizer
         // Metodo per creare una finestrella di dialogo personalizzata
         private (string nome, bool salva) ChiediNomeCitta(double lat, double lon)
         {
+            //metodo per salvare la posizione ai preferiti
             Form prompt = new Form() { Width = 400, Height = 200, Text = "Opzioni Punto", StartPosition = FormStartPosition.CenterParent };
             TextBox textBox = new TextBox() { Left = 20, Top = 50, Width = 340 };
             Button btnSalva = new Button() { Text = "Salva nei Preferiti", Left = 20, Top = 100, Width = 160 };
@@ -463,26 +482,6 @@ namespace Green_Analizer
             prompt.ShowDialog();
 
             return (nomeInput, deveSalvare);
-        }
-        private void PulisciFileTemporanei()
-        {
-            // Prendi tutti i file che iniziano con "dati_"
-            string[] fileTemporanei = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "dati_*.json");
-
-            // Prendi i nomi delle città salvate nel file dei preferiti
-            var preferiti = _storage.CaricaListaCitta().Keys.Select(k => $"dati_{new string(k.Where(char.IsLetterOrDigit).ToArray()).ToLower()}.json").ToList();
-
-            foreach (var file in fileTemporanei)
-            {
-                string nomeFile = Path.GetFileName(file);
-
-                // Se il file non è nei preferiti, eliminalo!
-                // (Assicurati che non elimini il file delle città preferite stesso!)
-                if (!preferiti.Contains(nomeFile) && nomeFile != "citta_preferite.json")
-                {
-                    try { File.Delete(file); } catch { }
-                }
-            }
         }
     }
 }
