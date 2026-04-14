@@ -412,8 +412,10 @@ namespace Green_Analizer
                 gridKpi1.DataSource = new List<RigaKpi> {
             new RigaKpi { Pollutant = "PM10", Good=rep1.GiorniFascePM10[0], Fair=rep1.GiorniFascePM10[1], Mod=rep1.GiorniFascePM10[2], Poor=rep1.GiorniFascePM10[3], VPoor=rep1.GiorniFascePM10[4], EPoor=rep1.GiorniFascePM10[5] },
             new RigaKpi { Pollutant = "PM2.5", Good=rep1.GiorniFascePM25[0], Fair=rep1.GiorniFascePM25[1], Mod=rep1.GiorniFascePM25[2], Poor=rep1.GiorniFascePM25[3], VPoor=rep1.GiorniFascePM25[4], EPoor=rep1.GiorniFascePM25[5] },
-            new RigaKpi { Pollutant = "NO2", Good=rep1.GiorniFasceNO2[0], Fair=rep1.GiorniFasceNO2[1], Mod=rep1.GiorniFasceNO2[2], Poor=rep1.GiorniFasceNO2[3], VPoor=rep1.GiorniFasceNO2[4], EPoor=rep1.GiorniFasceNO2[5] }
-        };
+            new RigaKpi { Pollutant = "NO2", Good=rep1.GiorniFasceNO2[0], Fair=rep1.GiorniFasceNO2[1], Mod=rep1.GiorniFasceNO2[2], Poor=rep1.GiorniFasceNO2[3], VPoor=rep1.GiorniFasceNO2[4], EPoor=rep1.GiorniFasceNO2[5] },
+            new RigaKpi { Pollutant = "AQI Tot", Good=rep1.GiorniFasceAQI[0], Fair=rep1.GiorniFasceAQI[1], Mod=rep1.GiorniFasceAQI[2], Poor=rep1.GiorniFasceAQI[3], VPoor=rep1.GiorniFasceAQI[4], EPoor=rep1.GiorniFasceAQI[5] }
+            }
+            ;
             }
 
             if (d2.Count > 0)
@@ -429,9 +431,12 @@ namespace Green_Analizer
                 gridKpi2.DataSource = new List<RigaKpi> {
             new RigaKpi { Pollutant = "PM10", Good=rep2.GiorniFascePM10[0], Fair=rep2.GiorniFascePM10[1], Mod=rep2.GiorniFascePM10[2], Poor=rep2.GiorniFascePM10[3], VPoor=rep2.GiorniFascePM10[4], EPoor=rep2.GiorniFascePM10[5] },
             new RigaKpi { Pollutant = "PM2.5", Good=rep2.GiorniFascePM25[0], Fair=rep2.GiorniFascePM25[1], Mod=rep2.GiorniFascePM25[2], Poor=rep2.GiorniFascePM25[3], VPoor=rep2.GiorniFascePM25[4], EPoor=rep2.GiorniFascePM25[5] },
-            new RigaKpi { Pollutant = "NO2", Good=rep2.GiorniFasceNO2[0], Fair=rep2.GiorniFasceNO2[1], Mod=rep2.GiorniFasceNO2[2], Poor=rep2.GiorniFasceNO2[3], VPoor=rep2.GiorniFasceNO2[4], EPoor=rep2.GiorniFasceNO2[5] }
-        };
+            new RigaKpi { Pollutant = "NO2", Good=rep2.GiorniFasceNO2[0], Fair=rep2.GiorniFasceNO2[1], Mod=rep2.GiorniFasceNO2[2], Poor=rep2.GiorniFasceNO2[3], VPoor=rep2.GiorniFasceNO2[4], EPoor=rep2.GiorniFasceNO2[5] },
+            new RigaKpi { Pollutant = "AQI Tot", Good=rep1.GiorniFasceAQI[0], Fair=rep1.GiorniFasceAQI[1], Mod=rep1.GiorniFasceAQI[2], Poor=rep1.GiorniFasceAQI[3], VPoor=rep1.GiorniFasceAQI[4], EPoor=rep1.GiorniFasceAQI[5] }
+                };
             }
+            ThemeManager.ColoraCelleGriglia(gridKpi1);
+            ThemeManager.ColoraCelleGriglia(gridKpi2);
         }
 
         private async Task<List<DatoAmbientale>> OttieniDatiIntelligente(string citta)

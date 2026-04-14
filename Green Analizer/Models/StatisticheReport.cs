@@ -22,5 +22,6 @@ namespace Green_Analizer.Models
         public int[] GiorniFascePM25 { get; set; } = new int[6];
         public int[] GiorniFascePM10 { get; set; } = new int[6];
         public int[] GiorniFasceNO2 { get; set; } = new int[6];
+        public int[] GiorniFasceAQI { get; set; } = new int[6];
     }
 }

@@ -54,6 +54,15 @@ namespace Green_Analizer.Service
                 else if (d.NO2 <= 230) report.GiorniFasceNO2[3]++;
                 else if (d.NO2 <= 340) report.GiorniFasceNO2[4]++;
                 else report.GiorniFasceNO2[5]++;
+
+                double aqiGiorno = Math.Max(d.AqiPm10 ?? 0, Math.Max(d.AqiPm25 ?? 0, d.AqiNo2 ?? 0));
+
+                if (aqiGiorno <= 20) report.GiorniFasceAQI[0]++;
+                else if (aqiGiorno <= 40) report.GiorniFasceAQI[1]++;
+                else if (aqiGiorno <= 60) report.GiorniFasceAQI[2]++;
+                else if (aqiGiorno <= 80) report.GiorniFasceAQI[3]++;
+                else if (aqiGiorno <= 100) report.GiorniFasceAQI[4]++;
+                else report.GiorniFasceAQI[5]++;
             }
 
             double valMedio = Math.Round(dati.Average(selValore), 1);

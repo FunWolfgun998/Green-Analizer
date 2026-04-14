@@ -148,5 +148,38 @@ namespace Green_Analizer
                 area.AxisY.MajorGrid.LineColor = Color.FromArgb(30, text);
             }
         }
+        public static void ColoraCelleGriglia(DataGridView grid)
+        {
+            // Definiamo i colori delle fasce (standard EU AQI)
+            Color cGood = Color.FromArgb(46, 204, 113);     // Verde brillante
+            Color cFair = Color.FromArgb(173, 221, 142);    // Verde chiaro
+            Color cMod = Color.FromArgb(241, 196, 15);     // Oro/Giallo
+            Color cPoor = Color.FromArgb(231, 76, 60);      // Rosso chiaro
+            Color cVPoor = Color.FromArgb(192, 57, 43);     // Rosso scuro
+            Color cEPoor = Color.FromArgb(142, 68, 173);    // Viola
+
+            foreach (DataGridViewRow row in grid.Rows)
+            {
+                // Controlliamo il valore di ogni cella. Se > 0, applichiamo il colore.
+                // Usiamo "row.Cells["NomeColonna"].Value" che corrisponde alle proprietà della classe RigaKpi
+
+                SetCellColor(row, "Good", cGood, Color.Black);
+                SetCellColor(row, "Fair", cFair, Color.Black);
+                SetCellColor(row, "Mod", cMod, Color.Black);
+                SetCellColor(row, "Poor", cPoor, Color.White);
+                SetCellColor(row, "VPoor", cVPoor, Color.White);
+                SetCellColor(row, "EPoor", cEPoor, Color.White);
+            }
+        }
+
+        private static void SetCellColor(DataGridViewRow row, string colName, Color back, Color fore)
+        {
+            var cell = row.Cells[colName];
+            if (cell.Value != null && int.TryParse(cell.Value.ToString(), out int val) && val > 0)
+            {
+                cell.Style.BackColor = back;
+                cell.Style.ForeColor = fore;
+            }
+        }
     }
 }
