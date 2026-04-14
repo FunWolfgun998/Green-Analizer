@@ -9,69 +9,76 @@ namespace Green_Analizer.Service
     {
         public StatisticheReport CalcolaStatistiche(List<DatoAmbientale> dati, string citta, string inquinante)
         {
-            if (dati == null || dati.Count == 0) return new StatisticheReport { Citta = citta, NomeInquinante = inquinante };
+            StatisticheReport report = new StatisticheReport { Citta = citta, NomeInquinante = inquinante };
+            if (dati == null || dati.Count == 0) return report;
 
-            //variabile per considerare un'aria "critia"
             double limiteCritico = 50;
             if (inquinante == "PM2.5") limiteCritico = 25;
             if (inquinante == "NO2") limiteCritico = 120;
 
-            //Tipo di inquinate che staimo andando a leggere
-            Func<DatoAmbientale, double> sel;
-            if (inquinante == "PM2.5") sel = d => d.PM25;
-            else if (inquinante == "NO2") sel = d => d.NO2;
-            else sel = d => d.PM10;
+            Func<DatoAmbientale, double> selValore;
+            Func<DatoAmbientale, double> selAqi;
 
-            double inquinanteMedio = Math.Round(dati.Average(sel), 1);
+            if (inquinante == "PM2.5") { selValore = d => d.PM25; selAqi = d => d.AqiPm25 ?? 0; }
+            else if (inquinante == "NO2") { selValore = d => d.NO2; selAqi = d => d.AqiNo2 ?? 0; }
+            else if (inquinante == "AQI (Generale)") { 
+                // Se seleziona AQI, prendiamo il peggiore tra i 3 (Regola ufficiale Europea)
+                selValore = d => Math.Max(d.AqiPm10 ?? 0, Math.Max(d.AqiPm25 ?? 0, d.AqiNo2 ?? 0)); 
+                selAqi = selValore; 
+            }
+            else { selValore = d => d.PM10; selAqi = d => d.AqiPm10 ?? 0; }
 
-            return new StatisticheReport
+            // Calcolo conteggio fasce per le tabelle
+            foreach (var d in dati)
             {
-                Citta = citta,
-                NomeInquinante = inquinante,
-                TempMedia = Math.Round(dati.Average(d => d.TemperaturaMedia), 1),
-                InquinanteMedio = inquinanteMedio,
-                InquinanteMax = Math.Round(dati.Max(sel), 1),
+                // PM2.5
+                if (d.PM25 <= 10) report.GiorniFascePM25[0]++;
+                else if (d.PM25 <= 20) report.GiorniFascePM25[1]++;
+                else if (d.PM25 <= 25) report.GiorniFascePM25[2]++;
+                else if (d.PM25 <= 50) report.GiorniFascePM25[3]++;
+                else if (d.PM25 <= 75) report.GiorniFascePM25[4]++;
+                else report.GiorniFascePM25[5]++;
 
-                // Un giorno è critico se supera la fascia "Moderata" ed entra in "Poor"
-                GiorniCritici = dati.Count(d => sel(d) > limiteCritico),
+                // PM10
+                if (d.PM10 <= 20) report.GiorniFascePM10[0]++;
+                else if (d.PM10 <= 40) report.GiorniFascePM10[1]++;
+                else if (d.PM10 <= 50) report.GiorniFascePM10[2]++;
+                else if (d.PM10 <= 100) report.GiorniFascePM10[3]++;
+                else if (d.PM10 <= 150) report.GiorniFascePM10[4]++;
+                else report.GiorniFascePM10[5]++;
 
-                PrecipitazioniTotali = Math.Round(dati.Sum(d => d.PrecipitazioniTotali), 1),
-                VentoMedio = Math.Round(dati.Average(d => d.VentoMedia), 1),
+                // NO2
+                if (d.NO2 <= 40) report.GiorniFasceNO2[0]++;
+                else if (d.NO2 <= 90) report.GiorniFasceNO2[1]++;
+                else if (d.NO2 <= 120) report.GiorniFasceNO2[2]++;
+                else if (d.NO2 <= 230) report.GiorniFasceNO2[3]++;
+                else if (d.NO2 <= 340) report.GiorniFasceNO2[4]++;
+                else report.GiorniFasceNO2[5]++;
+            }
 
-                // Valutazione precisa in base alla tabella ufficiale
-                QualitaAriaAqi = ValutaQualita(inquinante, inquinanteMedio)
-            };
+            double valMedio = Math.Round(dati.Average(selValore), 1);
+            double aqiMedio = Math.Round(dati.Average(selAqi), 1);
+
+            report.TempMedia = Math.Round(dati.Average(d => d.TemperaturaMedia), 1);
+            report.InquinanteMedio = valMedio;
+            report.InquinanteMax = Math.Round(dati.Max(selValore), 1);
+            report.GiorniCritici = dati.Count(d => selValore(d) > limiteCritico);
+            report.PrecipitazioniTotali = Math.Round(dati.Sum(d => d.PrecipitazioniTotali), 1);
+            report.VentoMedio = Math.Round(dati.Average(d => d.VentoMedia), 1);
+            report.AqiMedio = aqiMedio;
+            report.QualitaAriaAqi = ValutaAqiUfficiale(aqiMedio);
+
+            return report;
         }
 
-        private string ValutaQualita(string inquinante, double valore)
+        private string ValutaAqiUfficiale(double aqi)
         {
-            if (inquinante == "PM2.5")
-            {
-                if (valore <= 10) return "Buona ";
-                if (valore <= 20) return "Discreta ";
-                if (valore <= 25) return "Moderata ";
-                if (valore <= 50) return "Scadente ";
-                if (valore <= 75) return "Molto Scadente ";
-                return "Estremamente Scadente ";
-            }
-            else if (inquinante == "NO2")
-            {
-                if (valore <= 40) return "Buona ";
-                if (valore <= 90) return "Discreta ";
-                if (valore <= 120) return "Moderata ";
-                if (valore <= 230) return "Scadente ";
-                if (valore <= 340) return "Molto Scadente ";
-                return "Estremamente Scadente ";
-            }
-            else // PM10
-            {
-                if (valore <= 20) return "Buona ";
-                if (valore <= 40) return "Discreta ";
-                if (valore <= 50) return "Moderata ";
-                if (valore <= 100) return "Scadente ";
-                if (valore <= 150) return "Molto Scadente ";
-                return "Estremamente Scadente ";
-            }
+            if (aqi <= 20) return "Good";
+            if (aqi <= 40) return "Fair";
+            if (aqi <= 60) return "Moderate";
+            if (aqi <= 80) return "Poor";
+            if (aqi <= 100) return "Very Poor";
+            return "Extremely Poor";
         }
     }
 }

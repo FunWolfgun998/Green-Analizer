@@ -29,7 +29,11 @@ namespace Green_Analizer
 
         private Chart chartTemporale;
         private Chart chartCorrelazione;
-        private DataGridView gridDati;
+        private DataGridView gridDati1;
+        private DataGridView gridDati2;
+        private DataGridView gridKpi1; // Nuova tabella KPI Città 1
+        private DataGridView gridKpi2; // Nuova tabella KPI Città 2
+        private Label lblTitoloGrid1, lblTitoloGrid2;
         private TableLayoutPanel pnlKPI;
         private Label lblC1Nome, lblC1Temp, lblC1Pol, lblC1Critici;
         private Label lblC2Nome, lblC2Temp, lblC2Pol, lblC2Critici;
@@ -130,7 +134,7 @@ namespace Green_Analizer
             cmbCitta2 = new ComboBox { Width = 110, FlatStyle = FlatStyle.Flat, DropDownStyle = ComboBoxStyle.DropDownList };
             //ComboBox per selezionare il tipo di valore inquinante analizzare
             cmbInquinante = new ComboBox { Width = 80, FlatStyle = FlatStyle.Flat, DropDownStyle = ComboBoxStyle.DropDownList };
-            cmbInquinante.Items.AddRange(new string[] { "PM10", "PM2.5", "NO2" });
+            cmbInquinante.Items.AddRange(new string[] { "PM10", "PM2.5", "NO2", "AQI (Generale)" });
             cmbInquinante.SelectedIndex = 0;
             //ToolTip per visualizzare tabella dell'AQI
             ToolTip ttInfo = new ToolTip { AutoPopDelay = 20000, InitialDelay = 200, ReshowDelay = 200, IsBalloon = true, ToolTipTitle = "Soglie Ufficiali Qualità Aria (µg/m³)", ToolTipIcon = ToolTipIcon.Info };
@@ -197,13 +201,30 @@ namespace Green_Analizer
             AddToTop(btnAnalizza, 17);
             AddToTop(btnTema, 18);
 
-            // Parte centrale ocn i 2 grefici: quello in relazione al tempo e quelo in relazione alla temperatura
+            // Parte centrale con i 2 grafici: quello in relazione al tempo e quelo in relazione alla temperatura
             chartTemporale = CreaGraficoBase("Andamento nel Tempo");
             chartCorrelazione = CreaGraficoBase("Correlazione Temperatura / Inquinante");
+            //card 3
+            gridDati1 = new DataGridView { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells };
+            gridDati2 = new DataGridView { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells };
 
-            gridDati = new DataGridView { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill };
+            lblTitoloGrid1 = new Label { Text = "Dati Città 1", AutoSize = true, Font = new Font("Segoe UI", 10, FontStyle.Bold), Margin = new Padding(0, 0, 0, 5) };
+            lblTitoloGrid2 = new Label { Text = "Dati Città 2", AutoSize = true, Font = new Font("Segoe UI", 10, FontStyle.Bold), Margin = new Padding(0, 0, 0, 5) };
 
-            //LAYOUT DOPPIO PER LE STATISTICHE
+            TableLayoutPanel tblGriglie = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2 };
+            tblGriglie.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tblGriglie.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tblGriglie.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            tblGriglie.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            tblGriglie.Controls.Add(lblTitoloGrid1, 0, 0); tblGriglie.Controls.Add(lblTitoloGrid2, 1, 0);
+            tblGriglie.Controls.Add(gridDati1, 0, 1); tblGriglie.Controls.Add(gridDati2, 1, 1);
+
+            // CARD 4: KPI E TABELLE DI DISTRIBUZIONE
+            TableLayoutPanel pnlKPIContainer = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 2 };
+            pnlKPIContainer.RowStyles.Add(new RowStyle(SizeType.Percent, 45F)); // Spazio ai KPI testo
+            pnlKPIContainer.RowStyles.Add(new RowStyle(SizeType.Percent, 55F)); // Spazio alle tabelle
+
             pnlKPI = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 6, BackColor = Color.Transparent };
             pnlKPI.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             pnlKPI.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
@@ -211,41 +232,45 @@ namespace Green_Analizer
             Font fontNome = new Font("Segoe UI", 12, FontStyle.Bold);
             Font fontVal = new Font("Segoe UI", 10, FontStyle.Regular);
 
-            // Etichette Città 1
-            lblC1Nome = new Label { Text = "Città 1", Font = fontNome, AutoSize = true, ForeColor = Color.SeaGreen, Margin = new Padding(5, 5, 0, 5) };
-            lblC1Temp = new Label { Text = "🌡️ -- °C", Font = fontVal, AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
-            lblC1Meteo = new Label { Text = "🌧️ -- mm  |  💨 -- km/h", Font = fontVal, AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
-            lblC1Pol = new Label { Text = "🏭 -- µg/m³", Font = fontVal, AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
-            lblC1Critici = new Label { Text = "⚠️ -- Critici", Font = fontVal, AutoSize = true, ForeColor = Color.Tomato, Margin = new Padding(5, 2, 0, 2) };
-            lblC1Aqi = new Label { Text = "Indice AQI: --", Font = new Font("Segoe UI", 10, FontStyle.Bold), AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
+            lblC1Nome = new Label { Font = fontNome, AutoSize = true, ForeColor = Color.SeaGreen, Margin = new Padding(5, 5, 0, 5) };
+            lblC1Temp = new Label { Font = fontVal, AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
+            lblC1Meteo = new Label { Font = fontVal, AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
+            lblC1Pol = new Label { Font = fontVal, AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
+            lblC1Critici = new Label { Font = fontVal, AutoSize = true, ForeColor = Color.Tomato, Margin = new Padding(5, 2, 0, 2) };
+            lblC1Aqi = new Label { Font = new Font("Segoe UI", 10, FontStyle.Bold), AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
 
-            // Etichette Città 2
-            lblC2Nome = new Label { Text = "Città 2", Font = fontNome, AutoSize = true, ForeColor = Color.OrangeRed, Margin = new Padding(5, 5, 0, 5) };
-            lblC2Temp = new Label { Text = "🌡️ -- °C", Font = fontVal, AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
-            lblC2Meteo = new Label { Text = "🌧️ -- mm  |  💨 -- km/h", Font = fontVal, AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
-            lblC2Pol = new Label { Text = "🏭 -- µg/m³", Font = fontVal, AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
-            lblC2Critici = new Label { Text = "⚠️ -- Critici", Font = fontVal, AutoSize = true, ForeColor = Color.Tomato, Margin = new Padding(5, 2, 0, 2) };
-            lblC2Aqi = new Label { Text = "Indice AQI: --", Font = new Font("Segoe UI", 10, FontStyle.Bold), AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
+            lblC2Nome = new Label { Font = fontNome, AutoSize = true, ForeColor = Color.OrangeRed, Margin = new Padding(5, 5, 0, 5) };
+            lblC2Temp = new Label { Font = fontVal, AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
+            lblC2Meteo = new Label { Font = fontVal, AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
+            lblC2Pol = new Label { Font = fontVal, AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
+            lblC2Critici = new Label { Font = fontVal, AutoSize = true, ForeColor = Color.Tomato, Margin = new Padding(5, 2, 0, 2) };
+            lblC2Aqi = new Label { Font = new Font("Segoe UI", 10, FontStyle.Bold), AutoSize = true, Margin = new Padding(5, 2, 0, 2) };
 
-            // Aggiunta alla Tabella KPI
             pnlKPI.Controls.Add(lblC1Nome, 0, 0); pnlKPI.Controls.Add(lblC2Nome, 1, 0);
             pnlKPI.Controls.Add(lblC1Temp, 0, 1); pnlKPI.Controls.Add(lblC2Temp, 1, 1);
             pnlKPI.Controls.Add(lblC1Meteo, 0, 2); pnlKPI.Controls.Add(lblC2Meteo, 1, 2);
             pnlKPI.Controls.Add(lblC1Pol, 0, 3); pnlKPI.Controls.Add(lblC2Pol, 1, 3);
             pnlKPI.Controls.Add(lblC1Critici, 0, 4); pnlKPI.Controls.Add(lblC2Critici, 1, 4);
             pnlKPI.Controls.Add(lblC1Aqi, 0, 5); pnlKPI.Controls.Add(lblC2Aqi, 1, 5);
-            //4 aree dei grafici e dati
-            Padding cardMargin = new Padding(10);
 
-            Panel card1 = new Panel { Name = "Card1", Dock = DockStyle.Fill, Margin = cardMargin }; 
-            Panel card2 = new Panel { Name = "Card2", Dock = DockStyle.Fill, Margin = cardMargin }; 
-            Panel card3 = new Panel { Name = "Card3", Dock = DockStyle.Fill, Margin = cardMargin, Padding = new Padding(10) }; 
-            Panel card4 = new Panel { Name = "Card4", Dock = DockStyle.Fill, Margin = cardMargin, Padding = new Padding(10) };
-           
-            card1.Controls.Add(chartTemporale);
-            card2.Controls.Add(chartCorrelazione);
-            card3.Controls.Add(gridDati);
-            card4.Controls.Add(pnlKPI);
+            gridKpi1 = new DataGridView { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill };
+            gridKpi2 = new DataGridView { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill };
+
+            TableLayoutPanel tblKpiGrids = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1 };
+            tblKpiGrids.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tblKpiGrids.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tblKpiGrids.Controls.Add(gridKpi1, 0, 0);
+            tblKpiGrids.Controls.Add(gridKpi2, 1, 0);
+
+            pnlKPIContainer.Controls.Add(pnlKPI, 0, 0);
+            pnlKPIContainer.Controls.Add(tblKpiGrids, 0, 1);
+
+            // unione dei vari pannella cards
+            Padding cardMargin = new Padding(10);
+            Panel card1 = new Panel { Name = "Card1", Dock = DockStyle.Fill, Margin = cardMargin }; card1.Controls.Add(chartTemporale); tblMainLayout.Controls.Add(card1, 0, 0);
+            Panel card2 = new Panel { Name = "Card2", Dock = DockStyle.Fill, Margin = cardMargin }; card2.Controls.Add(chartCorrelazione); tblMainLayout.Controls.Add(card2, 0, 1);
+            Panel card3 = new Panel { Name = "Card3", Dock = DockStyle.Fill, Margin = cardMargin, Padding = new Padding(10) }; card3.Controls.Add(tblGriglie); tblMainLayout.Controls.Add(card3, 1, 0);
+            Panel card4 = new Panel { Name = "Card4", Dock = DockStyle.Fill, Margin = cardMargin, Padding = new Padding(10) }; card4.Controls.Add(pnlKPIContainer); tblMainLayout.Controls.Add(card4, 1, 1);
 
             tblMainLayout.Controls.Add(card1, 0, 0);
             tblMainLayout.Controls.Add(card2, 0, 1);
@@ -293,11 +318,9 @@ namespace Green_Analizer
 
         private async void BtnAnalizza_Click(object sender, EventArgs e)
         {
-            //Il metodo analizza aggiuge ai grafci i dati
             try
             {
-                btnAnalizza.Enabled = false;
-                btnAnalizza.Text = "Elaborazione...";
+                btnAnalizza.Enabled = false; btnAnalizza.Text = "Elaborazione...";
 
                 string c1 = cmbCitta1.SelectedItem.ToString();
                 string c2 = cmbCitta2.SelectedItem.ToString();
@@ -309,14 +332,106 @@ namespace Green_Analizer
                 var filtriC1 = datiC1.Where(d => d.Data.Date >= dtpInizio.Value.Date && d.Data.Date <= dtpFine.Value.Date).ToList();
                 var filtriC2 = datiC2.Where(d => d.Data.Date >= dtpInizio.Value.Date && d.Data.Date <= dtpFine.Value.Date).ToList();
 
-                gridDati.DataSource = filtriC1;
+                // AGGIORNAMENTO DELLE DUE TABELLE SEPARATE!
+                lblTitoloGrid1.Text = $"Dati {c1}";
+                lblTitoloGrid2.Text = $"Dati {c2}";
+                gridDati1.DataSource = filtriC1;
+                gridDati2.DataSource = filtriC2;
 
                 AggiornaGrafici(filtriC1, c1, filtriC2, c2, inqSelezionato);
                 AggiornaKPI(filtriC1, c1, filtriC2, c2, inqSelezionato);
             }
-            //eccezioni per troppe richieste o per assenza di internet 
             catch (Exception ex) { MessageBox.Show("Errore: " + ex.Message); }
             finally { btnAnalizza.Enabled = true; btnAnalizza.Text = "Esegui Analisi"; }
+        }
+
+        private void AggiornaGrafici(List<DatoAmbientale> d1, string c1, List<DatoAmbientale> d2, string c2, string inquinante)
+        {
+            chartTemporale.Series.Clear(); chartCorrelazione.Series.Clear();
+
+            Color col1 = ThemeManager.IsDarkMode ? Color.SpringGreen : Color.SeaGreen;
+            Color col2 = ThemeManager.IsDarkMode ? Color.Tomato : Color.OrangeRed;
+
+            // Y = Inquinante Grezzo (µg/m³) OPPURE AQI Generale
+            Func<DatoAmbientale, double> selY;
+            string unitaY = "(µg/m³)";
+
+            if (inquinante == "PM2.5") selY = d => d.PM25;
+            else if (inquinante == "NO2") selY = d => d.NO2;
+            else if (inquinante == "AQI (Generale)")
+            {
+                selY = d => Math.Max(d.AqiPm10 ?? 0, Math.Max(d.AqiPm25 ?? 0, d.AqiNo2 ?? 0));
+                unitaY = "(Indice)";
+            }
+            else selY = d => d.PM10;
+
+            // X = Variabile Meteo
+            string varMeteo = cmbCorrelazioneX.SelectedItem.ToString();
+            Func<DatoAmbientale, double> selX;
+            string unitaMisuraX = "";
+
+            if (varMeteo == "Precipitazioni") { selX = d => d.PrecipitazioniTotali; unitaMisuraX = "mm"; }
+            else if (varMeteo == "Vento") { selX = d => d.VentoMedia; unitaMisuraX = "km/h"; }
+            else { selX = d => d.TemperaturaMedia; unitaMisuraX = "°C"; }
+
+            // Disegno Grafico Temporale
+            chartTemporale.Titles[0].Text = $"Andamento {inquinante} nel Tempo";
+            Series s1Temp = new Series(c1) { ChartType = SeriesChartType.Line, BorderWidth = 2, Color = col1 };
+            Series s2Temp = new Series(c2) { ChartType = SeriesChartType.Line, BorderWidth = 2, Color = col2 };
+            foreach (var d in d1) s1Temp.Points.AddXY(d.Data, selY(d));
+            foreach (var d in d2) s2Temp.Points.AddXY(d.Data, selY(d));
+            chartTemporale.Series.Add(s1Temp); chartTemporale.Series.Add(s2Temp);
+            chartTemporale.ChartAreas[0].AxisY.Title = $"{inquinante} {unitaY}";
+
+            // Disegno Grafico Correlazione
+            chartCorrelazione.Titles[0].Text = $"Correlazione: {varMeteo} vs {inquinante}";
+            Series s1Corr = new Series(c1) { ChartType = SeriesChartType.Point, MarkerSize = 5, Color = col1 };
+            Series s2Corr = new Series(c2) { ChartType = SeriesChartType.Point, MarkerSize = 5, Color = col2 };
+            foreach (var d in d1) { if (selX(d) > 0 || varMeteo == "Temperatura") s1Corr.Points.AddXY(selX(d), selY(d)); }
+            foreach (var d in d2) { if (selX(d) > 0 || varMeteo == "Temperatura") s2Corr.Points.AddXY(selX(d), selY(d)); }
+            chartCorrelazione.Series.Add(s1Corr); chartCorrelazione.Series.Add(s2Corr);
+            chartCorrelazione.ChartAreas[0].AxisX.Title = $"{varMeteo} {unitaMisuraX}";
+            chartCorrelazione.ChartAreas[0].AxisY.Title = $"{inquinante} {unitaY}";
+        }
+
+        private void AggiornaKPI(List<DatoAmbientale> d1, string c1, List<DatoAmbientale> d2, string c2, string inquinante)
+        {
+            StatisticheReport rep1 = _analizzatore.CalcolaStatistiche(d1, c1, inquinante);
+            StatisticheReport rep2 = _analizzatore.CalcolaStatistiche(d2, c2, inquinante);
+
+            if (d1.Count > 0)
+            {
+                lblC1Nome.Text = rep1.Citta;
+                lblC1Temp.Text = $"🌡️ Temp: {rep1.TempMedia}°C";
+                lblC1Meteo.Text = $"🌧️ {rep1.PrecipitazioniTotali}mm | 💨 {rep1.VentoMedio}km/h";
+                lblC1Pol.Text = $"🏭 {inquinante}: Med {rep1.InquinanteMedio} | Max {rep1.InquinanteMax}";
+                lblC1Critici.Text = $"⚠️ {rep1.GiorniCritici} Giorni Critici (>{(inquinante == "PM2.5" ? 25 : (inquinante == "NO2" ? 120 : 50))})";
+                lblC1Aqi.Text = $"🌍 AQI Medio: {rep1.AqiMedio} ({rep1.QualitaAriaAqi})";
+
+                // Popola tabellina fasce C1
+                gridKpi1.DataSource = new List<RigaKpi> {
+            new RigaKpi { Pollutant = "PM10", Good=rep1.GiorniFascePM10[0], Fair=rep1.GiorniFascePM10[1], Mod=rep1.GiorniFascePM10[2], Poor=rep1.GiorniFascePM10[3], VPoor=rep1.GiorniFascePM10[4], EPoor=rep1.GiorniFascePM10[5] },
+            new RigaKpi { Pollutant = "PM2.5", Good=rep1.GiorniFascePM25[0], Fair=rep1.GiorniFascePM25[1], Mod=rep1.GiorniFascePM25[2], Poor=rep1.GiorniFascePM25[3], VPoor=rep1.GiorniFascePM25[4], EPoor=rep1.GiorniFascePM25[5] },
+            new RigaKpi { Pollutant = "NO2", Good=rep1.GiorniFasceNO2[0], Fair=rep1.GiorniFasceNO2[1], Mod=rep1.GiorniFasceNO2[2], Poor=rep1.GiorniFasceNO2[3], VPoor=rep1.GiorniFasceNO2[4], EPoor=rep1.GiorniFasceNO2[5] }
+        };
+            }
+
+            if (d2.Count > 0)
+            {
+                lblC2Nome.Text = rep2.Citta;
+                lblC2Temp.Text = $"🌡️ Temp: {rep2.TempMedia}°C";
+                lblC2Meteo.Text = $"🌧️ {rep2.PrecipitazioniTotali}mm | 💨 {rep2.VentoMedio}km/h";
+                lblC2Pol.Text = $"🏭 {inquinante}: Med {rep2.InquinanteMedio} | Max {rep2.InquinanteMax}";
+                lblC2Critici.Text = $"⚠️ {rep2.GiorniCritici} Giorni Critici";
+                lblC2Aqi.Text = $"🌍 AQI Medio: {rep2.AqiMedio} ({rep2.QualitaAriaAqi})";
+
+                // Popola tabellina fasce C2
+                gridKpi2.DataSource = new List<RigaKpi> {
+            new RigaKpi { Pollutant = "PM10", Good=rep2.GiorniFascePM10[0], Fair=rep2.GiorniFascePM10[1], Mod=rep2.GiorniFascePM10[2], Poor=rep2.GiorniFascePM10[3], VPoor=rep2.GiorniFascePM10[4], EPoor=rep2.GiorniFascePM10[5] },
+            new RigaKpi { Pollutant = "PM2.5", Good=rep2.GiorniFascePM25[0], Fair=rep2.GiorniFascePM25[1], Mod=rep2.GiorniFascePM25[2], Poor=rep2.GiorniFascePM25[3], VPoor=rep2.GiorniFascePM25[4], EPoor=rep2.GiorniFascePM25[5] },
+            new RigaKpi { Pollutant = "NO2", Good=rep2.GiorniFasceNO2[0], Fair=rep2.GiorniFasceNO2[1], Mod=rep2.GiorniFasceNO2[2], Poor=rep2.GiorniFasceNO2[3], VPoor=rep2.GiorniFasceNO2[4], EPoor=rep2.GiorniFasceNO2[5] }
+        };
+            }
         }
 
         private async Task<List<DatoAmbientale>> OttieniDatiIntelligente(string citta)
@@ -333,85 +448,6 @@ namespace Green_Analizer
             return dati;
         }
 
-        private void AggiornaGrafici(List<DatoAmbientale> d1, string c1, List<DatoAmbientale> d2, string c2, string inquinante)
-        {
-            chartTemporale.Series.Clear();
-            chartCorrelazione.Series.Clear();
-
-            Color col1 = ThemeManager.IsDarkMode ? Color.SpringGreen : Color.SeaGreen;
-            Color col2 = ThemeManager.IsDarkMode ? Color.Tomato : Color.OrangeRed;
-
-            // Asse Y (Inquinante)
-            Func<DatoAmbientale, double> selY;
-            if (inquinante == "PM2.5") selY = d => d.PM25;
-            else if (inquinante == "NO2") selY = d => d.NO2;
-            else selY = d => d.PM10;
-
-            // Asse X (Variabile Meteo selezionata)
-            string varMeteo = cmbCorrelazioneX.SelectedItem.ToString();
-            Func<DatoAmbientale, double> selX;
-            string unitaMisuraX = "°C";
-
-            if (varMeteo == "Precipitazioni") { selX = d => d.PrecipitazioniTotali; unitaMisuraX = "mm"; }
-            else if (varMeteo == "Vento") { selX = d => d.VentoMedia; unitaMisuraX = "km/h"; }
-            else { selX = d => d.TemperaturaMedia; unitaMisuraX = "°C"; }
-
-            // --- GRAFICO TEMPORALE ---
-            chartTemporale.Titles[0].Text = $"Andamento {inquinante} nel Tempo";
-            Series s1Temp = new Series(c1) { ChartType = SeriesChartType.Line, BorderWidth = 2, Color = col1 };
-            Series s2Temp = new Series(c2) { ChartType = SeriesChartType.Line, BorderWidth = 2, Color = col2 };
-
-            foreach (var d in d1) s1Temp.Points.AddXY(d.Data, selY(d));
-            foreach (var d in d2) s2Temp.Points.AddXY(d.Data, selY(d));
-
-            chartTemporale.Series.Add(s1Temp);
-            chartTemporale.Series.Add(s2Temp);
-            chartTemporale.ChartAreas[0].AxisX.Title = "Data";
-            chartTemporale.ChartAreas[0].AxisY.Title = $"{inquinante} (µg/m³)";
-
-            // --- GRAFICO CORRELAZIONE DINAMICO ---
-            chartCorrelazione.Titles[0].Text = $"Correlazione {varMeteo} vs {inquinante}";
-            Series s1Corr = new Series(c1) { ChartType = SeriesChartType.Point, MarkerSize = 5, Color = col1 };
-            Series s2Corr = new Series(c2) { ChartType = SeriesChartType.Point, MarkerSize = 5, Color = col2 };
-
-            // Disegna usando selX per l'asse orizzontale e selY per il verticale
-            foreach (var d in d1) { if (selX(d) > 0 || varMeteo == "Temperatura") s1Corr.Points.AddXY(selX(d), selY(d)); }
-            foreach (var d in d2) { if (selX(d) > 0 || varMeteo == "Temperatura") s2Corr.Points.AddXY(selX(d), selY(d)); }
-
-            chartCorrelazione.Series.Add(s1Corr);
-            chartCorrelazione.Series.Add(s2Corr);
-            chartCorrelazione.ChartAreas[0].AxisX.Title = $"{varMeteo} ({unitaMisuraX})";
-            chartCorrelazione.ChartAreas[0].AxisY.Title = $"{inquinante} (µg/m³)";
-        }
-
-        private void AggiornaKPI(List<DatoAmbientale> d1, string c1, List<DatoAmbientale> d2, string c2, string inquinante)
-        {
-            // Il backend si occupa di tutto!
-            StatisticheReport rep1 = _analizzatore.CalcolaStatistiche(d1, c1, inquinante);
-            StatisticheReport rep2 = _analizzatore.CalcolaStatistiche(d2, c2, inquinante);
-
-            lblC1Nome.Text = rep1.Citta;
-            if (d1.Count > 0)
-            {
-                lblC1Temp.Text = $"🌡️ Temp Media: {rep1.TempMedia} °C";
-                lblC1Meteo.Text = $"🌧️ Pioggia Tot: {rep1.PrecipitazioniTotali} mm \n💨 Vento: {rep1.VentoMedio} km/h";
-                lblC1Pol.Text = $"🏭 {inquinante} Medio: {rep1.InquinanteMedio} µg/m³";
-                lblC1Critici.Text = $"⚠️ {rep1.GiorniCritici} Giorni Fuori Limite";
-
-                // MOSTRA DIRETTAMENTE IL TESTO GENERATO DAL BACKEND (Es: "Moderata (🟡)")
-                lblC1Aqi.Text = $"Qualità Media: {rep1.QualitaAriaAqi}";
-            }
-
-            lblC2Nome.Text = rep2.Citta;
-            if (d2.Count > 0)
-            {
-                lblC2Temp.Text = $"🌡️ Temp Media: {rep2.TempMedia} °C";
-                lblC2Meteo.Text = $"🌧️ Pioggia Tot: {rep2.PrecipitazioniTotali} mm \n💨 Vento: {rep2.VentoMedio} km/h";
-                lblC2Pol.Text = $"🏭 {inquinante} Medio: {rep2.InquinanteMedio} µg/m³";
-                lblC2Critici.Text = $"⚠️ {rep2.GiorniCritici} Giorni Fuori Limite";
-                lblC2Aqi.Text = $"Qualità Media: {rep2.QualitaAriaAqi}";
-            }
-        }
         //Metodo per scegliere le coordinate tramite mappa e aggiugerlo alle opzioni
         private void ScegliDaMappa(ComboBox targetCombo)
         {
