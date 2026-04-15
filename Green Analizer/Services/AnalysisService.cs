@@ -7,6 +7,7 @@ namespace Green_Analizer.Service
 {
     public class AnalysisService
     {
+        //Metodo per ritornare le elaborazione di tutti i dati 
         public StatisticheReport CalcolaStatistiche(List<DatoAmbientale> dati, string citta, string inquinante)
         {
             StatisticheReport report = new StatisticheReport { Citta = citta, NomeInquinante = inquinante };

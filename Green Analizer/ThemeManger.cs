@@ -10,8 +10,8 @@ namespace Green_Analizer
         public static bool IsDarkMode = true;
 
         // Colori Dark: Contrasto netto. Bg è lo sfondo dietro, Panel è il riquadro chiaro.
-        private static Color DarkBg = Color.FromArgb(20, 20, 30);       // Sfondo Form e spazi vuoti (Molto scuro)
-        private static Color DarkPanel = Color.FromArgb(45, 45, 60);    // Sfondo dei 4 Quadrati (Più chiaro)
+        private static Color DarkBg = Color.FromArgb(20, 20, 30);       // Sfondo Form e spazi vuoti
+        private static Color DarkPanel = Color.FromArgb(45, 45, 60);    // Sfondo dei 4 Quadrati (Cards)
         private static Color DarkText = Color.FromArgb(248, 248, 242);  // Testo bianco sporco
         private static Color DarkAccent = Color.SeaGreen;               // Verde Green Economy
 
@@ -90,7 +90,7 @@ namespace Green_Analizer
                     // Sfondo generale della griglia uguale al quadrato
                     grid.BackgroundColor = panelBg;
 
-                    // CELLE DELLA GRIGLIA PIU' SCURE (Come hai richiesto!)
+                    //Celle più scure
                     grid.DefaultCellStyle.BackColor = bg;
                     grid.DefaultCellStyle.ForeColor = text;
 

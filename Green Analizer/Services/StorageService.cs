@@ -10,7 +10,7 @@ namespace Green_Analizer.Service
     {
         private readonly string _fileCittaSalvate = "citta_preferite.json";
 
-        // --- GESTIONE DEI DATI METEO ---
+        //Metodo per salvare dalla List<DatoAmbientale> ottenuta del APIService a file Json
         public void SalvaDati(string nomeCitta, List<DatoAmbientale> dati)
         {
             string nomePulito = new string(nomeCitta.Where(c => char.IsLetterOrDigit(c)).ToArray());
@@ -20,7 +20,7 @@ namespace Green_Analizer.Service
             string json = JsonConvert.SerializeObject(dati, Formatting.Indented);
             File.WriteAllText(percorsoFile, json);
         }
-
+        //Metodo per ottenere la lista dei dati  dal file JSON attraverso il nome della Città.
         public List<DatoAmbientale> CaricaDati(string nomeCitta)
         {
             string nomePulito = new string(nomeCitta.Where(c => char.IsLetterOrDigit(c)).ToArray());
@@ -35,7 +35,7 @@ namespace Green_Analizer.Service
             return JsonConvert.DeserializeObject<List<DatoAmbientale>>(json) ?? new List<DatoAmbientale>();
         }
 
-        // --- GESTIONE DELLE CITTA' PREFERITE DALLA MAPPA ---
+        //Metodo per salvare tutte le città preferite per averle salvate nella sessione successiva
         public void SalvaListaCitta(Dictionary<string, (string Lat, string Lon)> dizionario)
         {
             string json = JsonConvert.SerializeObject(dizionario, Formatting.Indented);

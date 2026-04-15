@@ -2,6 +2,7 @@ using System;
 
 namespace Green_Analizer.Models
 {
+    //Classe che contiene tutti i dati rielaborati da AnalysisService
     public class StatisticheReport
     {
         public string Citta { get; set; }

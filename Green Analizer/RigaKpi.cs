@@ -1,5 +1,6 @@
 namespace Green_Analizer
 {
+    //Classe che contiene il numero di giorni per ogni livello della qualità dell'aria per AQI, PM10, PM2.5 e NO2
     public class RigaKpi
     {
         public string Pollutant { get; set; }

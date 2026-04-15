@@ -21,13 +21,10 @@ namespace Green_Analizer
         //static void Main()
         //{
         //    // Avviamo il test
-        //    // Non usiamo .Wait() direttamente per evitare AggregateException
-        //    // Eseguiamo il metodo di test
         //    TestApiService().GetAwaiter().GetResult();
         //}
         //static async Task TestApiService()
         //{
-        //    // Debug.WriteLine scrive nella finestra "Output" di Visual Studio
         //    Debug.WriteLine("Avvio test API...");
 
         //    ApiService api = new ApiService();

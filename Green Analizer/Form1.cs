@@ -14,44 +14,9 @@ namespace Green_Analizer
 {
     public partial class Form1 : Form
     {
-        //Dichiarazione di tutti i elementi grafici del form 
-        private Panel pnlTopBar;
-        private TableLayoutPanel tblMainLayout;
-
-        private ComboBox cmbCitta1;
-        private ComboBox cmbCitta2;
-        private ComboBox cmbInquinante;
-        private ComboBox cmbVista;
-        private DateTimePicker dtpInizio;
-        private DateTimePicker dtpFine;
-        private Button btnAnalizza;
-        private Button btnTema;
-
-        private Chart chartTemporale;
-        private Chart chartCorrelazione;
-        private DataGridView gridDati1;
-        private DataGridView gridDati2;
-        private DataGridView gridKpi1; // Nuova tabella KPI Città 1
-        private DataGridView gridKpi2; // Nuova tabella KPI Città 2
-        private Label lblTitoloGrid1, lblTitoloGrid2;
-        private TableLayoutPanel pnlKPI;
-        private Label lblC1Nome, lblC1Temp, lblC1Pol, lblC1Critici;
-        private Label lblC2Nome, lblC2Temp, lblC2Pol, lblC2Critici;
-
-        // Uso della classe custom IconHoverButton per avere pulsanti rotondi 
-        private IconHoverButton btnMappa1;
-        private IconHoverButton btnMappa2;
-
-        private ComboBox cmbCorrelazioneX;
-        private ToolTip ttInfo;
-        private Label lblInfo;
-
-        private Label lblC1Meteo, lblC1Aqi;
-        private Label lblC2Meteo, lblC2Aqi;
-
+        // SERVIZI E LOGICA BACKEND
         private StorageService _storage = new StorageService();
         private AnalysisService _analizzatore = new AnalysisService();
-
 
         // Dizionario di base che attraverso il ServiceStorage aggiuge le posizioni preferite
         private Dictionary<string, (string Lat, string Lon)> _dizionarioCitta = new Dictionary<string, (string, string)>
@@ -62,6 +27,41 @@ namespace Green_Analizer
             { "Napoli", ("40.8518", "14.2681") },
             { "Torino", ("45.0703", "7.6869") }
         };
+
+        //contenitori principali
+        private Panel pnlTopBar;
+        private TableLayoutPanel tblMainLayout;
+        private TableLayoutPanel pnlKPI;
+
+        //Elementi per il controlli Utente
+        private ComboBox cmbCitta1;
+        private ComboBox cmbCitta2;
+        private ComboBox cmbInquinante;
+        private ComboBox cmbVista;
+        private ComboBox cmbCorrelazioneX;
+        private DateTimePicker dtpInizio;
+        private DateTimePicker dtpFine;
+        private Button btnAnalizza;
+        private Button btnTema;
+        private IconHoverButton btnMappa1;
+        private IconHoverButton btnMappa2;
+
+        //Elementi grafici
+        private Chart chartTemporale;
+        private Chart chartCorrelazione;
+        private DataGridView gridDati1;
+        private DataGridView gridDati2;
+        private DataGridView gridKpi1;
+        private DataGridView gridKpi2;
+        private Label lblTitoloGrid1;
+        private Label lblTitoloGrid2;
+
+        //Vari Label e Tooltip AQI
+        private ToolTip ttInfo;
+        private Label lblInfo;
+        private Label lblC1Nome, lblC1Temp, lblC1Pol, lblC1Critici, lblC1Meteo, lblC1Aqi;
+        private Label lblC2Nome, lblC2Temp, lblC2Pol, lblC2Critici, lblC2Meteo, lblC2Aqi;
+
 
         public Form1()
         {
@@ -92,10 +92,10 @@ namespace Green_Analizer
                 }
             }
         }
-
+        // Construisce tutta la struttura grafica del programma
         private void CostruisciInterfaccia()
         {
-            // metodo che imposta tutti i elementi grafici al loro posto
+            // imposta tutti i elementi grafici nodo corretto
             this.Text = "Green Analyzer - Dashboard Ambientale";
             this.WindowState = FormWindowState.Maximized;
             this.MinimumSize = new Size(1024, 768);
@@ -277,9 +277,9 @@ namespace Green_Analizer
             tblMainLayout.Controls.Add(card3, 1, 0);
             tblMainLayout.Controls.Add(card4, 1, 1);
         }
+        //metodo per inizializare i grafici
         private Chart CreaGraficoBase(string titolo)
         {
-            //metodo per inizializare i grafici
             Chart chart = new Chart { Dock = DockStyle.Fill };
             ChartArea area = new ChartArea();
             chart.ChartAreas.Add(area);
@@ -332,7 +332,7 @@ namespace Green_Analizer
                 var filtriC1 = datiC1.Where(d => d.Data.Date >= dtpInizio.Value.Date && d.Data.Date <= dtpFine.Value.Date).ToList();
                 var filtriC2 = datiC2.Where(d => d.Data.Date >= dtpInizio.Value.Date && d.Data.Date <= dtpFine.Value.Date).ToList();
 
-                // AGGIORNAMENTO DELLE DUE TABELLE SEPARATE!
+                //aggiornamneto delle 2 tabelle separatamente
                 lblTitoloGrid1.Text = $"Dati {c1}";
                 lblTitoloGrid2.Text = $"Dati {c2}";
                 gridDati1.DataSource = filtriC1;
@@ -344,7 +344,7 @@ namespace Green_Analizer
             catch (Exception ex) { MessageBox.Show("Errore: " + ex.Message); }
             finally { btnAnalizza.Enabled = true; btnAnalizza.Text = "Esegui Analisi"; }
         }
-
+        //Metodo che aggiorna i grafici
         private void AggiornaGrafici(List<DatoAmbientale> d1, string c1, List<DatoAmbientale> d2, string c2, string inquinante)
         {
             chartTemporale.Series.Clear(); chartCorrelazione.Series.Clear();
@@ -352,7 +352,7 @@ namespace Green_Analizer
             Color col1 = ThemeManager.IsDarkMode ? Color.SpringGreen : Color.SeaGreen;
             Color col2 = ThemeManager.IsDarkMode ? Color.Tomato : Color.OrangeRed;
 
-            // Y = Inquinante Grezzo (µg/m³) OPPURE AQI Generale
+            // Y = Inquinante Grezzo (µg/m³) o AQI Generale
             Func<DatoAmbientale, double> selY;
             string unitaY = "(µg/m³)";
 
@@ -392,8 +392,17 @@ namespace Green_Analizer
             chartCorrelazione.Series.Add(s1Corr); chartCorrelazione.Series.Add(s2Corr);
             chartCorrelazione.ChartAreas[0].AxisX.Title = $"{varMeteo} {unitaMisuraX}";
             chartCorrelazione.ChartAreas[0].AxisY.Title = $"{inquinante} {unitaY}";
+            if (inquinante == "AQI (Generale)")
+            {
+                chartTemporale.ChartAreas[0].AxisY.Maximum = 150; // Range fisso per AQI
+                chartTemporale.ChartAreas[0].AxisY.Minimum = 0;
+            }
+            else
+            {
+                chartTemporale.ChartAreas[0].AxisY.Maximum = double.NaN; // Auto-scaling per altri inquinanti
+            }
         }
-
+        //metodo che aggiorna la parte di rielaborazione dati
         private void AggiornaKPI(List<DatoAmbientale> d1, string c1, List<DatoAmbientale> d2, string c2, string inquinante)
         {
             StatisticheReport rep1 = _analizzatore.CalcolaStatistiche(d1, c1, inquinante);
@@ -474,7 +483,7 @@ namespace Green_Analizer
                         _dizionarioCitta[nomeVisualizzato] = (lat.ToString(), lon.ToString());
                     }
 
-                    // SALVATAGGIO PERMANENTE: Solo se l'utente ha scritto un nome 
+                    // Salvataggio permanente
                     if (risultato.salva && !string.IsNullOrWhiteSpace(risultato.nome))
                     {
                         _storage.SalvaListaCitta(_dizionarioCitta);
@@ -492,7 +501,7 @@ namespace Green_Analizer
                 }
             }
         }
-        // Metodo per creare una finestrella di dialogo personalizzata
+        // Metodo per creare una finestrella di dialogo per salvare le coordinate scelte
         private (string nome, bool salva) ChiediNomeCitta(double lat, double lon)
         {
             //metodo per salvare la posizione ai preferiti

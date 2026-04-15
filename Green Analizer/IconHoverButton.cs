@@ -9,25 +9,26 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace Green_Analizer
 {
+    // classe per inizializzare i pulsanti per le mappe in modo che siano circolari e trasparenti.
     public class IconHoverButton : Button
-{
-    private bool isHovered = false;
-
-    public IconHoverButton()
     {
-        this.DoubleBuffered = true;
-        this.Cursor = Cursors.Hand;
-        this.FlatStyle = FlatStyle.Flat;
-        this.FlatAppearance.BorderSize = 0; // Fondamentale per eliminare il quadrato
-        this.FlatAppearance.MouseOverBackColor = Color.Transparent;
-        this.FlatAppearance.MouseDownBackColor = Color.Transparent;
-        this.BackColor = Color.Transparent; // Trasparente
-        this.Size = new Size(35, 30);
-        this.Font = new Font("Segoe UI Emoji", 18);
-    }
+        private bool isHovered = false;
 
-    protected override void OnMouseEnter(EventArgs e) { isHovered = true; Invalidate(); base.OnMouseEnter(e); }
-    protected override void OnMouseLeave(EventArgs e) { isHovered = false; Invalidate(); base.OnMouseLeave(e); }
+        public IconHoverButton()
+        {
+            this.DoubleBuffered = true;
+            this.Cursor = Cursors.Hand;
+            this.FlatStyle = FlatStyle.Flat;
+            this.FlatAppearance.BorderSize = 0; // Fondamentale per eliminare il quadrato
+            this.FlatAppearance.MouseOverBackColor = Color.Transparent;
+            this.FlatAppearance.MouseDownBackColor = Color.Transparent;
+            this.BackColor = Color.Transparent; // Trasparente
+            this.Size = new Size(35, 30);
+            this.Font = new Font("Segoe UI Emoji", 18);
+        }
+
+        protected override void OnMouseEnter(EventArgs e) { isHovered = true; Invalidate(); base.OnMouseEnter(e); }
+        protected override void OnMouseLeave(EventArgs e) { isHovered = false; Invalidate(); base.OnMouseLeave(e); }
 
         protected override void OnPaint(PaintEventArgs e)
         {
@@ -40,7 +41,7 @@ namespace Green_Analizer
                 }
             }
 
-            // Disegna il cerchio (Il segreto è usare Width e Height uguali)
+            // Disegna il cerchio (elisse con larghezza e lunghezza uguale)
             if (isHovered)
             {
                 e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
@@ -59,7 +60,7 @@ namespace Green_Analizer
                 }
             }
 
-            // 3. Disegna l'emoji centrata
+            // Disegna l'emoji centrata
             TextRenderer.DrawText(e.Graphics, Text, Font, ClientRectangle, ForeColor,
                                   TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
         }
